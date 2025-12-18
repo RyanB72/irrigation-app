@@ -20,41 +20,46 @@ Modern Progressive Web App (PWA) for controlling the ESP32C3 irrigation system v
 - **Web Bluetooth API** - BLE communication
 - **React-Three-Fiber** - 3D graphics (coming soon)
 
+## Live Demo
+
+**✅ Deployed to Production**
+- GitHub: https://github.com/RyanB72/irrigation-app
+- Auto-deploy on push to `main`
+- Access via Vercel deployment URL
+
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
 - Chrome or Edge browser (for Web Bluetooth support)
 - ESP32C3 irrigation controller with Bluetooth enabled
 
-### Installation
+### Using Production Deployment
 
+1. **Visit the Vercel deployment URL** on your phone or desktop (Chrome/Edge)
+2. **Enable BLE on ESP32C3**: Press the Bluetooth pairing button (D0/GPIO2) on your controller
+3. **Connect**: Click "Connect via BLE" button in the app
+4. **Select Device**: Choose "Irrigation Controller" from the browser dialog
+5. **Control**: Manage zones and schedules through the UI
+
+### Local Development
+
+**Installation:**
 ```bash
 npm install
 ```
 
-### Development
-
+**Development server:**
 ```bash
-npm run dev
+npm run dev              # Local only
+npm run dev -- --host    # Network accessible for phone testing
 ```
 
-Open http://localhost:5173 in Chrome or Edge.
-
-### Build for Production
-
+**Build for production:**
 ```bash
 npm run build
 npm run preview
 ```
-
-## Usage
-
-1. **Enable BLE on ESP32C3**: Press the Bluetooth pairing button (D0/GPIO2) on your controller
-2. **Connect**: Click "Connect via BLE" button in the app
-3. **Select Device**: Choose "Irrigation Controller" from the browser dialog
-4. **Control**: Manage zones and schedules through the UI
 
 ## Browser Compatibility
 
@@ -94,9 +99,12 @@ Communicates with ESP32C3 using JSON commands over BLE:
 
 ## Development Roadmap
 
-### Phase 1: MVP (Current)
+### Phase 1: MVP Foundation ✅
 - [x] Bluetooth connection
 - [x] Basic UI layout
+- [x] GitHub repository
+- [x] Vercel deployment with auto-deploy
+- [x] Production testing via mobile
 - [ ] 3D isometric box visualization
 - [ ] Manual zone control
 - [ ] Schedule viewing
@@ -115,14 +123,18 @@ Communicates with ESP32C3 using JSON commands over BLE:
 
 ## Deployment
 
-Deploy to Vercel, Netlify, or any static host:
+**✅ Currently Deployed to Vercel**
+- Auto-deploy enabled on push to `main`
+- HTTPS enabled (required for Web Bluetooth)
+- Edge CDN distribution
 
+**To deploy changes:**
 ```bash
-npm run build
-# Upload dist/ folder
+git add .
+git commit -m "Your changes"
+git push
+# Vercel auto-deploys in ~2-3 minutes
 ```
-
-**Important**: HTTPS required for Web Bluetooth!
 
 ## License
 

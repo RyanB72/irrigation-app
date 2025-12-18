@@ -247,6 +247,10 @@ npm run preview    # Test production build
 8. ✅ Landing page with connection flow
 9. ✅ Tailwind CSS configured with water theme
 10. ✅ Dev server running with network access
+11. ✅ GitHub repository created (https://github.com/RyanB72/irrigation-app)
+12. ✅ Vercel deployment configured with auto-deploy on push
+13. ✅ TypeScript Web Bluetooth types fixed (@types/web-bluetooth)
+14. ✅ Production deployment tested successfully on mobile via BLE
 
 ### 🚧 In Progress / Not Started
 - [ ] 3D isometric irrigation box visualization (React-Three-Fiber)
@@ -269,17 +273,19 @@ npm run preview    # Test production build
 - ESP32C3 controller powered on
 - BLE pairing enabled (press D0/GPIO2 button on controller)
 - Chrome or Edge browser (Web Bluetooth required)
-- Phone and PC on same WiFi network (if testing from phone)
 
-### Test Flow
+### Production Testing (Recommended)
+1. **Access Vercel deployment**: Visit your Vercel app URL from phone/desktop Chrome
+2. **Press BT button** on ESP32C3 (GPIO2/D0) to enable pairing
+3. **Click "Connect via BLE"** in app
+4. **Select device** from browser dialog: "Irrigation Controller"
+5. **Verify connection**: Green dot appears, device name shown
+6. **Test BLE communication** - connection confirmed working!
+
+### Local Development Testing
 1. **Start dev server**: `npm run dev -- --host`
-2. **Access from phone**: Open Chrome, go to `http://172.30.141.35:5173/`
-3. **Press BT button** on ESP32C3 (GPIO2/D0) to enable pairing
-4. **Click "Connect via BLE"** in app
-5. **Select device** from browser dialog: "Irrigation Controller"
-6. **Verify connection**: Green dot appears, device name shown
-7. **Open browser console** (F12 or Chrome DevTools on Android)
-8. **Test commands** via console or wait for UI implementation
+2. **Access from phone**: Open Chrome, go to `http://[YOUR_LOCAL_IP]:5173/`
+3. Follow steps 2-6 from Production Testing above
 
 ### Console Testing Examples
 ```javascript
@@ -381,38 +387,27 @@ await sendCommand({ cmd: "stop" })
 
 ## Deployment Strategy
 
-### Development
-- Current: Local dev server with network access
-- Access via phone for BLE testing
+### Production (ACTIVE)
+**✅ Deployed to Vercel**
+- GitHub repo: https://github.com/RyanB72/irrigation-app
+- Auto-deploy enabled: Every push to `main` triggers new deployment
+- HTTPS enabled (required for Web Bluetooth)
+- Edge CDN with global distribution
+- Access from Vercel dashboard for deployment URL and logs
 
-### Production Options
-
-**Option 1: Vercel (Recommended)**
+**Deployment workflow:**
 ```bash
-npm run build
-# Push to GitHub
-# Connect Vercel to repo
-# Auto-deploy on push
+# Make changes locally
+git add .
+git commit -m "Your changes"
+git push
+# Vercel auto-deploys in ~2-3 minutes
 ```
-- Free tier available
-- Auto HTTPS (required for Web Bluetooth)
-- Edge CDN
-- Zero config
 
-**Option 2: Netlify**
-- Similar to Vercel
-- Free tier with HTTPS
-- Drag & drop `dist/` folder
-
-**Option 3: GitHub Pages**
-- Free hosting
-- HTTPS by default
-- Manual: `npm run build && gh-pages -d dist`
-
-**Option 4: Self-hosted**
-- Nginx/Apache serving `dist/` folder
-- Must configure HTTPS (Let's Encrypt)
-- Domain required for HTTPS
+### Local Development
+- Dev server: `npm run dev`
+- Network access: `npm run dev -- --host`
+- Local testing via phone on same WiFi
 
 ## Important Commands Reference
 
@@ -538,4 +533,5 @@ For questions about this web app, see `irrigation-app/README.md`.
 ---
 
 **Last Updated**: 2025-12-18 by Claude (Sonnet 4.5)
-**Next Review**: After 3D visualization implementation
+**Status**: Phase 1 complete - deployed to production, BLE tested successfully
+**Next Phase**: 3D visualization implementation
