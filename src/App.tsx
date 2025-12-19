@@ -23,7 +23,7 @@ function App() {
       {/* Header */}
       <header className="pt-8 pb-4 text-center">
         <h1 className="text-4xl font-bold text-gray-800 mb-2">
-          Irrigation Controller
+          Irrigation Controller V1.1
         </h1>
         <p className="text-gray-600">
           Smart watering system with Bluetooth control
