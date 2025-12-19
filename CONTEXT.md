@@ -58,10 +58,13 @@
 /home/ltsryan/irrigation-app/
 ├── src/
 │   ├── components/
-│   │   └── ConnectionStatus.tsx      # BLE connection UI widget (top-right)
+│   │   ├── ConnectionStatus.tsx      # BLE connection UI widget (top-right)
+│   │   ├── ZoneCard.tsx              # Individual zone card component
+│   │   ├── ZoneConfigModal.tsx       # Zone configuration modal (manual + schedule)
+│   │   └── TimeSync.tsx              # Time synchronization component
 │   ├── hooks/
 │   │   ├── useBluetooth.ts           # Custom hook for BLE operations
-│   │   └── useIrrigationState.ts     # Zustand store for app state
+│   │   └── useIrrigationState.ts     # Zustand store for app/connection state
 │   ├── services/
 │   │   └── bluetooth.service.ts      # Web Bluetooth API wrapper
 │   ├── types/
@@ -186,9 +189,66 @@ DAY_NAMES = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
 **App.tsx - Main Layout**:
 - **Before Connection**: Landing page with features list, instructions to press BT button
-- **After Connection**: Placeholder for 3D visualization + 4 zone status cards
-- Header with title
+- **After Connection**: Time sync card + 4 clickable zone cards
+- Header with title (V1.1)
 - Footer with tech stack credits
+
+## What We Built (Phase 2 - Zone Control)
+
+### 1. Zone Cards (`src/components/ZoneCard.tsx`)
+
+**Simple clickable cards** for each zone:
+- Zone number and name (Zone 1-4)
+- Active/idle indicator
+- Click to open configuration modal
+- Hover effects
+
+### 2. Zone Configuration Modal (`src/components/ZoneConfigModal.tsx`)
+
+**Two-section modal** for comprehensive zone control:
+
+**Manual Control Section** (top):
+- Duration input (1-999 minutes)
+- Green "Start Now" button → sends `start_zone` BLE command
+- Red "Stop" button → sends `stop` BLE command
+- Real-time feedback with loading states
+
+**Automated Schedule Section** (bottom):
+- Enable/disable toggle
+- Time picker (HH:MM format)
+- Duration slider + number input
+- Day of week toggle buttons (S/M/T/W/T/F/S)
+- Save button → sends `set_program` to ESP32
+- Auto-loads current config via `get_program` on open
+
+**Simplified Design**:
+- Always uses program 0 (hides multi-program complexity)
+- Single start time per zone (not 4)
+- Clean, intuitive UI for typical home irrigation use
+
+### 3. Time Sync Component (`src/components/TimeSync.tsx`)
+
+**Clock synchronization**:
+- Live clock display (updates every second)
+- "Sync Time" button
+- Sends browser time to ESP32 via `set_time` BLE command
+- ISO timestamp format (YYYY-MM-DDTHH:mm:ss)
+
+### 4. State Management Fix (`src/hooks/useIrrigationState.ts`)
+
+**Critical bug fix**:
+- Moved BLE connection state from `useState` to Zustand store
+- **Problem**: Each component calling `useBluetooth()` had separate state instances
+- **Symptom**: ConnectionStatus showed "Connected" but App.tsx didn't update
+- **Solution**: Shared global state via Zustand
+- Now all components see same connection status
+
+### 5. Enhanced Bluetooth Hook (`src/hooks/useBluetooth.ts`)
+
+**New helpers**:
+- `setTime(time?)` - Sync ESP32 clock (defaults to browser time)
+- Uses Zustand for connection state (not local useState)
+- All BLE commands properly typed
 
 ### 5. Styling (Tailwind CSS v3)
 
@@ -234,9 +294,9 @@ npm run build      # Creates dist/ folder
 npm run preview    # Test production build
 ```
 
-## Current State (as of 2025-12-18)
+## Current State (as of 2025-12-19)
 
-### ✅ Completed
+### ✅ Completed - Phase 1 (MVP)
 1. ✅ Project initialized (Vite + React + TypeScript)
 2. ✅ All dependencies installed (Three.js, Tailwind, Zustand, PWA plugin)
 3. ✅ Folder structure created
@@ -252,20 +312,29 @@ npm run preview    # Test production build
 13. ✅ TypeScript Web Bluetooth types fixed (@types/web-bluetooth)
 14. ✅ Production deployment tested successfully on mobile via BLE
 
+### ✅ Completed - Phase 2 (Zone Control)
+15. ✅ Zone cards UI (4 clickable zones)
+16. ✅ Zone configuration modal
+17. ✅ Manual zone control (start/stop with duration)
+18. ✅ Schedule configuration (time, days, duration, enable/disable)
+19. ✅ Time sync to ESP32 from browser
+20. ✅ Zustand state management for BLE connection (fixed shared state bug)
+21. ✅ Simplified UI hiding multi-program complexity (uses program 0 only)
+22. ✅ Auto-load/save zone programs from/to ESP32
+
 ### 🚧 In Progress / Not Started
 - [ ] 3D isometric irrigation box visualization (React-Three-Fiber)
-- [ ] Manual zone control UI
-- [ ] Schedule viewing (read programs from ESP32)
-- [ ] Schedule editing (update programs)
-- [ ] Real-time status updates (poll get_status)
+- [ ] Real-time status updates (poll get_status periodically)
+- [ ] Active zone indicator on cards (show which zone is running)
+- [ ] Remaining time display for active zones
 - [ ] PWA manifest and service worker
 - [ ] Icons and splash screens
 - [ ] Offline mode
 - [ ] Error handling improvements
-- [ ] Loading states
 - [ ] Animations (water flow, zone highlights)
 - [ ] Dark mode
 - [ ] Settings screen
+- [ ] Multi-device support
 
 ## Testing Instructions
 
@@ -519,9 +588,10 @@ arduino-cli upload -p /dev/ttyUSB0 --fqbn esp32:esp32:esp32c3 irrigation.ino
 ## Project Timeline
 
 **Started**: December 18, 2025
-**Current Phase**: MVP Foundation (Phase 1)
-**Estimated MVP**: 2-3 weeks from start
-**Estimated Full-Featured**: 4-6 weeks from start
+**Phase 1 Completed**: December 18, 2025 (MVP Foundation)
+**Phase 2 Completed**: December 19, 2025 (Zone Control)
+**Current Phase**: Phase 3 (Status & Visualization)
+**Next Milestone**: Real-time status updates + 3D visualization
 
 ## Contact & Collaboration
 
@@ -532,6 +602,8 @@ For questions about this web app, see `irrigation-app/README.md`.
 
 ---
 
-**Last Updated**: 2025-12-18 by Claude (Sonnet 4.5)
-**Status**: Phase 1 complete - deployed to production, BLE tested successfully
-**Next Phase**: 3D visualization implementation
+**Last Updated**: 2025-12-19 by Claude (Sonnet 4.5)
+**Status**: Phase 2 complete - zone control, manual operation, scheduling all working
+**Deployed**: Production on Vercel (auto-deploy enabled)
+**Version**: V1.1
+**Next Phase**: Real-time status polling + 3D visualization

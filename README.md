@@ -5,9 +5,11 @@ Modern Progressive Web App (PWA) for controlling the ESP32C3 irrigation system v
 ## Features
 
 - 🌊 Real-time Bluetooth control of 4 irrigation zones
-- 📅 Schedule management (3 programs per zone, 4 start times each)
+- 🎯 Manual zone control (start/stop with custom duration)
+- 📅 Schedule management with simple UI (time, days, duration)
+- ⏰ Browser-to-ESP32 time synchronization
 - 📱 Works on mobile and desktop (Chrome/Edge)
-- 🔌 Offline-capable PWA
+- 🔌 Offline-capable PWA (coming soon)
 - 🎨 Modern UI with Tailwind CSS
 - 🎮 3D visualization (coming soon with React-Three-Fiber)
 
@@ -105,17 +107,24 @@ Communicates with ESP32C3 using JSON commands over BLE:
 - [x] GitHub repository
 - [x] Vercel deployment with auto-deploy
 - [x] Production testing via mobile
-- [ ] 3D isometric box visualization
-- [ ] Manual zone control
-- [ ] Schedule viewing
 
-### Phase 2: Full Features
-- [ ] Schedule editing
-- [ ] Real-time status updates
+### Phase 2: Zone Control ✅
+- [x] Zone cards UI (4 zones)
+- [x] Manual zone control (start/stop)
+- [x] Schedule configuration (time, days, duration)
+- [x] Time synchronization
+- [x] Auto-load/save zone programs
+- [x] Simplified UI (hides multi-program complexity)
+
+### Phase 3: Status & Visualization
+- [ ] 3D isometric box visualization
+- [ ] Real-time status updates (poll get_status)
+- [ ] Active zone indicator on cards
+- [ ] Remaining time display
+
+### Phase 4: Polish & PWA
 - [ ] PWA installation
 - [ ] Offline mode
-
-### Phase 3: Polish
 - [ ] Animations
 - [ ] Dark mode
 - [ ] Multiple device support
