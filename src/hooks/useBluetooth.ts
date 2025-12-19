@@ -104,6 +104,15 @@ export function useBluetooth() {
     });
   }, [sendCommand]);
 
+  // Helper: Set time on controller
+  const setTime = useCallback(async (time?: string) => {
+    const timeStr = time || new Date().toISOString().slice(0, 19);
+    await sendCommand({
+      cmd: 'set_time',
+      time: timeStr,
+    });
+  }, [sendCommand]);
+
   return {
     // Connection state
     isConnected: connectionState.isConnected,
@@ -122,6 +131,7 @@ export function useBluetooth() {
     stopWatering,
     getProgram,
     setProgram,
+    setTime,
 
     // Response
     lastResponse,

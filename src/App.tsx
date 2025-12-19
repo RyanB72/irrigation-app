@@ -1,8 +1,20 @@
+import { useState } from 'react';
 import { ConnectionStatus } from './components/ConnectionStatus';
+import { ZoneCard } from './components/ZoneCard';
+import { ZoneConfigModal } from './components/ZoneConfigModal';
+import { TimeSync } from './components/TimeSync';
 import { useBluetooth } from './hooks/useBluetooth';
 
 function App() {
   const { isConnected } = useBluetooth();
+  const [selectedZone, setSelectedZone] = useState<number | null>(null);
+
+  const zones = [
+    { number: 1, name: 'Front Lawn' },
+    { number: 2, name: 'Back Garden' },
+    { number: 3, name: 'Side Yard' },
+    { number: 4, name: 'Flower Beds' },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -69,37 +81,36 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="text-center">
-            <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                3D Visualization Coming Soon
-              </h2>
-              <div className="bg-gradient-to-br from-water-50 to-green-50 rounded-lg h-64 flex items-center justify-center mb-6">
-                <p className="text-gray-500 text-lg">
-                  Isometric irrigation box will appear here
-                </p>
-              </div>
+          <div className="w-full max-w-4xl mx-auto space-y-6">
+            {/* Time Sync */}
+            <TimeSync />
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 mb-1">Zone 1</div>
-                  <div className="text-xl font-semibold text-gray-800">Idle</div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 mb-1">Zone 2</div>
-                  <div className="text-xl font-semibold text-gray-800">Idle</div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 mb-1">Zone 3</div>
-                  <div className="text-xl font-semibold text-gray-800">Idle</div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600 mb-1">Zone 4</div>
-                  <div className="text-xl font-semibold text-gray-800">Idle</div>
-                </div>
+            {/* Zone Controls */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                Irrigation Zones
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {zones.map((zone) => (
+                  <ZoneCard
+                    key={zone.number}
+                    zoneNumber={zone.number}
+                    zoneName={zone.name}
+                    onClick={() => setSelectedZone(zone.number)}
+                  />
+                ))}
               </div>
             </div>
           </div>
+        )}
+
+        {/* Zone Config Modal */}
+        {selectedZone && (
+          <ZoneConfigModal
+            isOpen={selectedZone !== null}
+            onClose={() => setSelectedZone(null)}
+            zoneNumber={selectedZone}
+          />
         )}
       </main>
 
