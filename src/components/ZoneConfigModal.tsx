@@ -9,7 +9,7 @@ interface ZoneConfigModalProps {
 }
 
 export function ZoneConfigModal({ isOpen, onClose, zoneNumber }: ZoneConfigModalProps) {
-  const { setProgram, getProgram, lastResponse } = useBluetooth();
+  const { setProgram, getProgram, startZone, stopWatering, lastResponse } = useBluetooth();
 
   const [startTime, setStartTime] = useState('06:00');
   const [duration, setDuration] = useState(15);
@@ -17,6 +17,11 @@ export function ZoneConfigModal({ isOpen, onClose, zoneNumber }: ZoneConfigModal
   const [enabled, setEnabled] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Manual control state
+  const [manualDuration, setManualDuration] = useState(10);
+  const [isStarting, setIsStarting] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
 
   // Load current config when modal opens
   useEffect(() => {
@@ -51,8 +56,22 @@ export function ZoneConfigModal({ isOpen, onClose, zoneNumber }: ZoneConfigModal
         setIsSaving(false);
         alert('Failed to save: ' + (lastResponse.message || 'Unknown error'));
       }
+    } else if (lastResponse?.cmd === 'start_zone') {
+      setIsStarting(false);
+      if (lastResponse.status === 'ok') {
+        alert(`Zone ${zoneNumber} started for ${manualDuration} minutes`);
+      } else {
+        alert('Failed to start zone: ' + (lastResponse.message || 'Unknown error'));
+      }
+    } else if (lastResponse?.cmd === 'stop') {
+      setIsStopping(false);
+      if (lastResponse.status === 'ok') {
+        alert('Zone stopped');
+      } else {
+        alert('Failed to stop zone: ' + (lastResponse.message || 'Unknown error'));
+      }
     }
-  }, [lastResponse, isSaving]);
+  }, [lastResponse, isSaving, zoneNumber, manualDuration]);
 
   const loadCurrentConfig = async () => {
     setIsLoading(true);
@@ -74,6 +93,30 @@ export function ZoneConfigModal({ isOpen, onClose, zoneNumber }: ZoneConfigModal
       console.error('Failed to save:', error);
       setIsSaving(false);
       alert('Failed to save configuration');
+    }
+  };
+
+  const handleManualStart = async () => {
+    setIsStarting(true);
+    try {
+      await startZone(zoneNumber, manualDuration);
+      // Response will be handled by useEffect
+    } catch (error) {
+      console.error('Failed to start zone:', error);
+      setIsStarting(false);
+      alert('Failed to start zone');
+    }
+  };
+
+  const handleManualStop = async () => {
+    setIsStopping(true);
+    try {
+      await stopWatering();
+      // Response will be handled by useEffect
+    } catch (error) {
+      console.error('Failed to stop zone:', error);
+      setIsStopping(false);
+      alert('Failed to stop zone');
     }
   };
 
@@ -159,6 +202,79 @@ export function ZoneConfigModal({ isOpen, onClose, zoneNumber }: ZoneConfigModal
             </div>
           ) : (
             <>
+              {/* Manual Control Section */}
+              <div className="border-2 border-water-200 rounded-lg p-4 bg-water-50">
+                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-water-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Manual Control
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Run Duration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="999"
+                      value={manualDuration}
+                      onChange={(e) => setManualDuration(parseInt(e.target.value) || 1)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-water-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleManualStart}
+                      disabled={isStarting || isStopping}
+                      className={`
+                        flex-1 px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2
+                        ${isStarting || isStopping
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-500 text-white hover:bg-green-600 shadow-md hover:shadow-lg'
+                        }
+                      `}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {isStarting ? 'Starting...' : 'Start Now'}
+                    </button>
+                    <button
+                      onClick={handleManualStop}
+                      disabled={isStarting || isStopping}
+                      className={`
+                        flex-1 px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2
+                        ${isStarting || isStopping
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-red-500 text-white hover:bg-red-600 shadow-md hover:shadow-lg'
+                        }
+                      `}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                      </svg>
+                      {isStopping ? 'Stopping...' : 'Stop'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-gray-300 my-6"></div>
+
+              {/* Schedule Configuration Section */}
+              <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Automated Schedule
+              </h3>
+
               {/* Enable/Disable Toggle */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <span className="font-medium text-gray-700">Schedule Enabled</span>

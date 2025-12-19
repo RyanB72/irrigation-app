@@ -10,10 +10,10 @@ function App() {
   const [selectedZone, setSelectedZone] = useState<number | null>(null);
 
   const zones = [
-    { number: 1, name: 'Front Lawn' },
-    { number: 2, name: 'Back Garden' },
-    { number: 3, name: 'Side Yard' },
-    { number: 4, name: 'Flower Beds' },
+    { number: 1, name: 'Zone 1' },
+    { number: 2, name: 'Zone 2' },
+    { number: 3, name: 'Zone 3' },
+    { number: 4, name: 'Zone 4' },
   ];
 
   return (
