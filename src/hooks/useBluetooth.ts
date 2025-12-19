@@ -1,13 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { bluetoothService } from '../services/bluetooth.service';
-import type { BLECommand, BLEResponse, ConnectionState } from '../types/irrigation.types';
+import { useIrrigationState } from './useIrrigationState';
+import type { BLECommand, BLEResponse } from '../types/irrigation.types';
 
 export function useBluetooth() {
-  const [connectionState, setConnectionState] = useState<ConnectionState>({
-    isConnected: false,
-    isConnecting: false,
-  });
-
+  const { isConnected, isConnecting, connectionError, deviceName, setConnectionState } = useIrrigationState();
   const [lastResponse, setLastResponse] = useState<BLEResponse | null>(null);
 
   // Setup response listener
@@ -20,41 +17,32 @@ export function useBluetooth() {
 
   // Connect to device
   const connect = useCallback(async () => {
-    setConnectionState({ isConnected: false, isConnecting: true });
+    setConnectionState(false, true, null, null);
 
     try {
       await bluetoothService.connect();
-      setConnectionState({
-        isConnected: true,
-        isConnecting: false,
-      });
+      const name = bluetoothService.getDeviceName();
+      setConnectionState(true, false, null, name);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setConnectionState({
-        isConnected: false,
-        isConnecting: false,
-        error: errorMessage,
-      });
+      setConnectionState(false, false, errorMessage, null);
       throw error;
     }
-  }, []);
+  }, [setConnectionState]);
 
   // Disconnect from device
   const disconnect = useCallback(async () => {
     await bluetoothService.disconnect();
-    setConnectionState({
-      isConnected: false,
-      isConnecting: false,
-    });
-  }, []);
+    setConnectionState(false, false, null, null);
+  }, [setConnectionState]);
 
   // Send command to device
   const sendCommand = useCallback(async (command: BLECommand) => {
-    if (!connectionState.isConnected) {
+    if (!isConnected) {
       throw new Error('Not connected to device');
     }
     await bluetoothService.sendCommand(command);
-  }, [connectionState.isConnected]);
+  }, [isConnected]);
 
   // Helper: Get system status
   const getStatus = useCallback(async () => {
@@ -115,10 +103,10 @@ export function useBluetooth() {
 
   return {
     // Connection state
-    isConnected: connectionState.isConnected,
-    isConnecting: connectionState.isConnecting,
-    error: connectionState.error,
-    deviceName: bluetoothService.getDeviceName(),
+    isConnected,
+    isConnecting,
+    error: connectionError,
+    deviceName,
 
     // Actions
     connect,

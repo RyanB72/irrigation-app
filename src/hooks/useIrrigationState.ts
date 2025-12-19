@@ -6,11 +6,18 @@ interface IrrigationStore {
   systemState: SystemState;
   zones: ZoneConfig[];
 
+  // Bluetooth connection state
+  isConnected: boolean;
+  isConnecting: boolean;
+  connectionError: string | null;
+  deviceName: string | null;
+
   // Actions
   setSystemState: (state: Partial<SystemState>) => void;
   setZone: (index: number, zone: ZoneConfig) => void;
   setActiveZone: (zone: number, duration: number) => void;
   clearActiveZone: () => void;
+  setConnectionState: (isConnected: boolean, isConnecting: boolean, error?: string | null, deviceName?: string | null) => void;
 }
 
 export const useIrrigationState = create<IrrigationStore>((set) => ({
@@ -22,6 +29,12 @@ export const useIrrigationState = create<IrrigationStore>((set) => ({
     manualMode: false,
     btPairingEnabled: false,
   },
+
+  // Initial connection state
+  isConnected: false,
+  isConnecting: false,
+  connectionError: null,
+  deviceName: null,
 
   // Initial zones (4 zones with 3 programs each)
   zones: Array.from({ length: 4 }, (_, i) => ({
@@ -68,4 +81,12 @@ export const useIrrigationState = create<IrrigationStore>((set) => ({
         manualMode: false,
       },
     })),
+
+  setConnectionState: (isConnected, isConnecting, error = null, deviceName = null) =>
+    set({
+      isConnected,
+      isConnecting,
+      connectionError: error,
+      deviceName,
+    }),
 }));
