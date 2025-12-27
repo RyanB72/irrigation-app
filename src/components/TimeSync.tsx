@@ -25,10 +25,10 @@ export function TimeSync() {
     // Fetch immediately on connect
     getStatus();
 
-    // Then fetch every 5 seconds
+    // Then fetch every 10 seconds
     const interval = setInterval(() => {
       getStatus();
-    }, 5000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [isConnected, getStatus]);
@@ -102,7 +102,7 @@ export function TimeSync() {
     if (!rtcDate) return null;
 
     const driftSeconds = Math.abs((currentTime.getTime() - rtcDate.getTime()) / 1000);
-    const inSync = driftSeconds < 3; // Within 3 seconds = in sync
+    const inSync = driftSeconds < 120; // Within 2 minutes = in sync
 
     return { drift: driftSeconds, inSync };
   };
