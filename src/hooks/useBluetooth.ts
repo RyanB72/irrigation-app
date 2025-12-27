@@ -94,7 +94,18 @@ export function useBluetooth() {
 
   // Helper: Set time on controller
   const setTime = useCallback(async (time?: string) => {
-    const timeStr = time || new Date().toISOString().slice(0, 19);
+    let timeStr = time;
+    if (!timeStr) {
+      // Format local time as "YYYY-MM-DDTHH:mm:ss" (not UTC)
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      timeStr = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    }
     await sendCommand({
       cmd: 'set_time',
       time: timeStr,
