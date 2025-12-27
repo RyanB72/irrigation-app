@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useBluetooth } from '../hooks/useBluetooth';
 
 export function TimeSync() {
-  const { setTime, lastResponse } = useBluetooth();
+  const { setTime, getStatus, lastResponse, isConnected } = useBluetooth();
   const [isSyncing, setIsSyncing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [rtcTime, setRtcTime] = useState<string | null>(null);
 
   // Update current time every second
   useEffect(() => {
@@ -14,18 +15,44 @@ export function TimeSync() {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetch RTC time periodically when connected
+  useEffect(() => {
+    if (!isConnected) {
+      setRtcTime(null);
+      return;
+    }
+
+    // Fetch immediately on connect
+    getStatus();
+
+    // Then fetch every 5 seconds
+    const interval = setInterval(() => {
+      getStatus();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isConnected, getStatus]);
+
   // Handle response
   useEffect(() => {
     if (lastResponse?.cmd === 'set_time') {
       if (lastResponse.status === 'ok') {
         setIsSyncing(false);
-        // Could show success message
+        // Fetch updated RTC time
+        getStatus();
       } else {
         setIsSyncing(false);
         alert('Failed to sync time: ' + (lastResponse.message || 'Unknown error'));
       }
+    } else if (lastResponse?.cmd === 'get_status' && lastResponse.status === 'ok') {
+      // Update RTC time from status response
+      if (lastResponse.time && lastResponse.time !== 'unavailable') {
+        setRtcTime(lastResponse.time as string);
+      } else {
+        setRtcTime(null);
+      }
     }
-  }, [lastResponse]);
+  }, [lastResponse, getStatus]);
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -54,13 +81,69 @@ export function TimeSync() {
     });
   };
 
+  const parseRtcTime = (rtcTimeStr: string): Date | null => {
+    // Parse "2025-12-27 16:30:00" format
+    const match = rtcTimeStr.match(/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+    if (!match) return null;
+    const [, year, month, day, hour, minute, second] = match;
+    return new Date(
+      parseInt(year),
+      parseInt(month) - 1, // JS months are 0-indexed
+      parseInt(day),
+      parseInt(hour),
+      parseInt(minute),
+      parseInt(second)
+    );
+  };
+
+  const getTimeDrift = (): { drift: number; inSync: boolean } | null => {
+    if (!rtcTime) return null;
+    const rtcDate = parseRtcTime(rtcTime);
+    if (!rtcDate) return null;
+
+    const driftSeconds = Math.abs((currentTime.getTime() - rtcDate.getTime()) / 1000);
+    const inSync = driftSeconds < 3; // Within 3 seconds = in sync
+
+    return { drift: driftSeconds, inSync };
+  };
+
+  const timeDrift = getTimeDrift();
+
   return (
     <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-sm text-gray-600 mb-1">Current Time</div>
+        <div className="flex-1">
+          <div className="text-sm text-gray-600 mb-1">Phone Time</div>
           <div className="text-xl font-semibold text-gray-800">{formatTime(currentTime)}</div>
           <div className="text-xs text-gray-500">{formatDate(currentTime)}</div>
+
+          {isConnected && rtcTime && (
+            <>
+              <div className="text-sm text-gray-600 mt-3 mb-1 flex items-center gap-2">
+                ESP32 RTC
+                {timeDrift && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                    timeDrift.inSync
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {timeDrift.inSync ? '✓ Synced' : `±${Math.round(timeDrift.drift)}s`}
+                  </span>
+                )}
+              </div>
+              <div className="text-lg font-semibold text-gray-700">
+                {parseRtcTime(rtcTime)?.toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
+              </div>
+            </>
+          )}
+
+          {isConnected && !rtcTime && (
+            <div className="text-sm text-gray-400 mt-2">RTC unavailable</div>
+          )}
         </div>
         <button
           onClick={handleSync}
